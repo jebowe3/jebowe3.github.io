@@ -1,1 +1,24 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Collisions Between Bicycles and Automobiles in Fayette County, KY</title>
+	</head>
 
+	<body>
+		<!-- Jay Bowen -->
+	
+<iframe width="100%" height="520" frameborder="0" src="https://welcome-back-carto.cartodb.com/viz/7f93aeae-0fd9-11e6-b280-0e674067d321/embed_map" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe>
+	<div style="float:left; width:480px; padding:10px;">
+		<!-- This is a map of bicycle collisions over time in Fayette County. -->
+		<h2>First column</h2>
+	</div>
+
+	<div style="float:left; width:480px; padding:10px;">
+		<!-- The map presents bicycle and automobile collisions between 1/26/2004 and 4/7/2016 by density, census blocks, fatalities, and injuries. -->
+		<h2>Second column</h2>
+	</div>
+	
+	</body>
+
+</html>
