@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Seoul Land Use: 1988</title>
+
+  <link href="http://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" type="text/css">
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+      background: whitesmoke;
+      font-family: Montserrat, sans-serif;
+    }
+
+    h1,
+    h2 {
+      position: absolute;
+      left: 20px;
+      top: 10px;
+      font-size: 1.5em;
+      font-weight: 100;
+      color: #005DAA;
+    }
+
+    h2 {
+      top: 60px;
+      font-size: 1.2em;
+    }
+
+    #map {
+      width: 850px;
+      height: 850px;
+      margin: 10px auto;
+      border: 1px solid #d3d3d3;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Seoul Land Use: 1988</h1>
+  <h2></h2>
+  <div id="map"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/1.0.1/simple_statistics.min.js"></script>
+
+  <script>
+    var width = 850,
+      height = 850;
+
+    var svg = d3.select("#map") // select the document's body
+      .append("svg") // create and append a new svg element to it
+      .attr("width", width) // give the svg width
+      .attr("height", height); // give the svg height
+
+    var projection = d3.geo.albers() // create a new d3 projection function, albers equal area
+      .center([0, 37.495])
+      .rotate([-127.005, 0])
+      .parallels([38.00, 37.00])
+      .scale(75000) // play with the scale until it's 'zoomed' about right
+      .translate([width / 2, height / 2]); // center the svg (0,0 is top, left)
+
+    var geoPath = d3.geo.path() //  create a new geo path generator
+      .projection(projection); // assign the project we just created to it
+
+    queue()
+      .defer(d3.json, 'data/SCA-Landcover-88.json')
+      .await(makeMap);
+
+    function makeMap(error, landuse) {
+
+      svg.append("g") // create and append a new SVG 'g' element to the svg
+        .selectAll("path") // selectAll the path features that haven't been created yet
+        .data(landuse.features) // bind the GeoJSON features data to them
+        .enter() // prepare to
+        .append("path") // append the newly create path elements to the 'g'
+        .attr("d", geoPath) // define the screen coordinates of the new path(s)
+        .attr("class", "landcover") // give each a class name of 'landcover'
+        .attr("fill", colorData);
+    }
+
+    function colorData(landuse) {
+      if (landuse.properties.landcover == 'Water') {
+        return '#0602FA';
+      } else if (landuse.properties.landcover == 'Forest') {
+        return '#2A4B2D';
+      } else if (landuse.properties.landcover == 'Grass') {
+        return '#399926';
+      } else if (landuse.properties.landcover == 'Exposed') {
+        return '#59CECA';
+      } else if (landuse.properties.landcover == 'Marsh') {
+        return '#7C227E';
+      } else if (landuse.properties.landcover == 'Farmland') {
+        return '#EEE907';
+      } else if (landuse.properties.landcover == 'Urban') {
+        return '#464646';
+      };
+    }
+
+  </script>
+
+</body>
+</html>
