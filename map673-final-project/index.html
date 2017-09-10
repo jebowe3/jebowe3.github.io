@@ -98,6 +98,96 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
 
   <script>
+
+    // Set 1988 land cover layer variable
+    var landUse88 = L.geoJson(null, {
+      style: function(feature) {
+        return {
+          stroke: 0,
+          fillOpacity: 1,
+          fillColor: '#1f78b4'
+        };
+      },
+
+    });
+
+    $.getJSON("data/SCA-Landcover-88.json", function(data) {
+        landUse88.addData(data);
+    }); // end add 1988 land cover data
+
+
+    // Set 1998 land cover layer variable
+    var landUse98 = L.geoJson(null, {
+      style: function(feature) {
+        return {
+          stroke: 0,
+          fillOpacity: 1,
+          fillColor: '#1f78b4'
+        };
+      },
+
+    });
+
+    $.getJSON("data/SCA-Landcover-98.json", function(data) {
+        landUse98.addData(data);
+    }); // end add 1998 land cover data
+
+    // mapbox access token for Jay's account
+    L.mapbox.accessToken = 'pk.eyJ1IjoiamVib3dlMyIsImEiOiJjajY1M3l6bWIxeTQwMndtcXRuN3F4ejFpIn0.aE7P49pqaBKjy2HTOw-tgw';
+
+    // create the Leaflet map using mapbox.light tiles
+    var map = L.mapbox.map('map', 'mapbox.light', {
+      zoomSnap: .1,
+      center: [37.5, 126.975],
+      zoom: 10.5,
+      minZoom: 9,
+      maxZoom: 12,
+      maxBounds: L.latLngBounds([38.0, 126.5], [37.0, 127.5])
+    }); // end map creation
+
+    // specify the basemap and overlays to put in the layers control
+    var baseMaps = {
+        "ROK": map,
+    };
+
+    var overlayMaps = {
+        "LandUse88": landUse88,
+        "LandUse98": landUse98
+    };
+
+    // initialize up the L.control.layers
+    L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+
+/*
+    // parse the geojson (very simplified example here)
+    var zip = L.geoJson(zipjson, {});
+    var counties = L.geoJson(countiesjson, {});
+
+    // from there, similar to the example:
+    var usmap = L.tileLayer(url, {});
+
+    // initialize the map
+    var map = L.map('map', {
+        center: [39.73, -104.99],
+        zoom: 10,
+        layers: [usmap]
+    });
+
+    // specify the basemap and overlays to put in the layers control
+    var baseMaps = {
+        "US": usmap,
+    };
+
+    var overlayMaps = {
+        "Counties": counties,
+        "Zips": zip
+    };
+
+    // initialize up the L.control.layers
+    L.control.layers(baseMaps, overlayMaps).addTo(map);
+*/
+/*
     // mapbox access token for Jay's account
     L.mapbox.accessToken = 'pk.eyJ1IjoiamVib3dlMyIsImEiOiJjajY1M3l6bWIxeTQwMndtcXRuN3F4ejFpIn0.aE7P49pqaBKjy2HTOw-tgw';
     var map = L.mapbox.map('map', 'mapbox.light', {
@@ -108,8 +198,9 @@
       maxZoom: 12,
       maxBounds: L.latLngBounds([38.0, 126.5], [37.0, 127.5])
     });
-
-    var landuse88 = $.getJSON("data/SCA-Landcover-88.json", function(data) {
+*/
+/*
+    var landUse88 = $.getJSON("data/SCA-Landcover-88.json", function(data) {
       var dataLayer = L.geoJson(data, {
         style: function(feature) {
           return {
@@ -122,7 +213,7 @@
 
       drawMap(dataLayer);
     });
-
+*/
     function drawMap(dataLayer) {
 
       var currentYear = $('.slider').val();
@@ -143,7 +234,7 @@
         });
       });
 
-      sequenceUI(landuse88);
+      sequenceUI(landUse88, landUse98);
       createTemporalLegend(currentYear);
 
     } // end drawMap function
@@ -166,7 +257,7 @@
       }
     } // End getColor function
 
-  function sequenceUI(landuse88) {
+  function sequenceUI(landUse88, landUse98) {
 
       // create Leaflet control for the slider
       var sliderControl = L.control({
@@ -192,15 +283,12 @@
           var currentYear = $(this).val();
           // Add some new functions to change map here
           //resizeCircles(girlsLayer, boysLayer, currentYear);
-          //retrieveInfo(boysLayer, currentYear);
+          //retrieveLayer(landUse88, landUse98, currentYear);
           createTemporalLegend(currentYear);
         });
 
-    } // End sequenceUI function
+    }; // End sequenceUI function
 
-
-
-    sliderControl.addTo(map);
 
     // add a temporal legend in sync with the UI slider
     function createTemporalLegend(currentYear) {
