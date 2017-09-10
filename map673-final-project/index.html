@@ -1,107 +1,234 @@
 <!DOCTYPE html>
-<html>
+<html lang='en'>
 
 <head>
-  <meta charset="utf-8">
-  <title>Seoul Land Use: 1988</title>
+  <title>Seoul Land Use: 1988-2008</title>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <link href='https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.min.css' rel='stylesheet'>
+  <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet' />
 
-  <link href="http://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" type="text/css">
   <style>
-    body {
-      padding: 0;
-      margin: 0;
-      background: whitesmoke;
-      font-family: Montserrat, sans-serif;
+    h1 {
+      color: #003478;
     }
 
-    h1,
     h2 {
+      color: #C60C30;
+    }
+
+    .legend {
+      background-color: #fff;
+      border-radius: 3px;
+      bottom: 30px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
+      font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+      padding: 10px;
       position: absolute;
-      left: 20px;
-      top: 10px;
-      font-size: 1.5em;
-      font-weight: 100;
-      color: #005DAA;
+      right: 10px;
+      z-index: 1;
     }
 
-    h2 {
-      top: 60px;
-      font-size: 1.2em;
+    .legend h4 {
+      font-size: 14px;
+      margin: 0 0 10px;
     }
 
-    #map {
-      width: 850px;
-      height: 850px;
-      margin: 10px auto;
-      border: 1px solid #d3d3d3;
+    .legend div span {
+      border-radius: 50%;
+      display: inline-block;
+      height: 10px;
+      margin-right: 5px;
+      width: 10px;
     }
   </style>
+
 </head>
 
 <body>
-  <h1>Seoul Land Use: 1988</h1>
-  <h2></h2>
-  <div id="map"></div>
+  <div class='grid'>
+    <div class='col col--12 col--3-ml p12 pb6 viewport-third viewport-full-ml'>
+      <div class='h-full scroll-auto'>
+        <h1 class='txt-subhead mb6'>Seoul Land Use: 1988-2008</h1>
+        <p>This map uses open source land cover data from the Korean Ministry of Environment using Landsat TM and Landsat 7 imagery, administrative units from the Seoul Metropolitan Government, and greenbelt data from the Ministry of Land, Infrastructure
+          and Transport. This map plots twenty year trends in urban development and green space between 1988 and 2008.</p>
+        <h2 class='txt-xl mt18 mb12'>How to use this map:</h2>
+        <p>Welcome to Seoul! This example will take you through one scenario for using this map to tell a particular story:</p>
+        <p>1.</p>
+        <p>2.</p>
+        <p>3.</p>
+        <footer class='mt12 bg-gray-faint txt-s'>
+          <ul>
+            <li>Explore the raw data: <a class='link' href='https://egis.me.go.kr/main.do'>Korea land cover</a>, <a class='link' href='https://data.seoul.go.kr/openinf/mapview.jsp?infId=OA-13222'>Seoul administrative units</a>, and <a class='link' href='https://openapi.nsdi.go.kr/nsdi/eios/OpenapiList.do?provOrg=NIA&gubun=F'>greenbelt boundaries</a></li>
+            <li>Map authored by <a class='link' href='https://geography.as.uky.edu/users/jebowe3'>Jay Bowen</a></li>
+          </ul>
+        </footer>
+      </div>
+    </div>
+    <div class='col col--12 col--9-ml h180 h-full-ml'>
+      <div id="map" class='viewport-twothirds viewport-full-ml'></div>
 
+      <!-- ui slider -->
+      <div id='slider' class='range w240 bg-white border border--gray-light round-ml p12'>
+        <input type='range' min="1988" max="2008" value="1" step="10" class="slider" />
+      </div>
+
+      <div id='landcover-legend' class='legend'>
+        <h4><strong>Land Cover</strong></h4>
+        <div><span style='background-color: #0602FA'></span>Water</div>
+        <div><span style='background-color: #2A4B2D'></span>Forest</div>
+        <div><span style='background-color: #399926'></span>Grass</div>
+        <div><span style='background-color: #59CECA'></span>Exposed</div>
+        <div><span style='background-color: #7C227E'></span>Marsh</div>
+        <div><span style='background-color: #EEE907'></span>Farmland</div>
+        <div><span style='background-color: #A9A9A9'></span>Urban</div>
+      </div>
+
+      <div id='temporal' class='py6 px12 bg-white border border--gray-light round bottom left wmax200'>
+        <h3 class='txt-bold'>Year: <span></span></h3>
+      </div>
+
+    </div>
+  </div>
+
+  <script async defer src='https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.js'></script>
+  <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/1.0.1/simple_statistics.min.js"></script>
 
   <script>
-    var width = 850,
-      height = 850;
+    // mapbox access token for Jay's account
+    L.mapbox.accessToken = 'pk.eyJ1IjoiamVib3dlMyIsImEiOiJjajY1M3l6bWIxeTQwMndtcXRuN3F4ejFpIn0.aE7P49pqaBKjy2HTOw-tgw';
+    var map = L.mapbox.map('map', 'mapbox.light', {
+      zoomSnap: 0.1,
+      center: [37.5, 126.975],
+      zoom: 10.5,
+      minZoom: 9,
+      maxZoom: 12,
+      maxBounds: L.latLngBounds([38.0, 126.5], [37.0, 127.5])
+    });
 
-    var svg = d3.select("#map") // select the document's body
-      .append("svg") // create and append a new svg element to it
-      .attr("width", width) // give the svg width
-      .attr("height", height); // give the svg height
+    var landuse88 = $.getJSON("data/SCA-Landcover-88.json", function(data) {
+      var dataLayer = L.geoJson(data, {
+        style: function(feature) {
+          return {
+            stroke: 0,
+            fillOpacity: 1,
+            fillColor: '#1f78b4'
+          };
+        },
+      }).addTo(map);
 
-    var projection = d3.geo.albers() // create a new d3 projection function, albers equal area
-      .center([0, 37.495])
-      .rotate([-127.005, 0])
-      .parallels([38.00, 37.00])
-      .scale(75000) // play with the scale until it's 'zoomed' about right
-      .translate([width / 2, height / 2]); // center the svg (0,0 is top, left)
+      drawMap(dataLayer);
+    });
 
-    var geoPath = d3.geo.path() //  create a new geo path generator
-      .projection(projection); // assign the project we just created to it
+    function drawMap(dataLayer) {
 
-    queue()
-      .defer(d3.json, 'data/SCA-Landcover-88.json')
-      .await(makeMap);
+      var currentYear = $('.slider').val();
 
-    function makeMap(error, landuse) {
+      var breaks = [
+        "Water",
+        "Forest",
+        "Grass",
+        "Exposed",
+        "Marsh",
+        "Farmland",
+        "Urban"
+      ];
 
-      svg.append("g") // create and append a new SVG 'g' element to the svg
-        .selectAll("path") // selectAll the path features that haven't been created yet
-        .data(landuse.features) // bind the GeoJSON features data to them
-        .enter() // prepare to
-        .append("path") // append the newly create path elements to the 'g'
-        .attr("d", geoPath) // define the screen coordinates of the new path(s)
-        .attr("class", "landcover") // give each a class name of 'landcover'
-        .attr("fill", colorData);
-    }
+      dataLayer.eachLayer(function(layer) {
+        layer.setStyle({
+          fillColor: getColor(layer.feature.properties['landcover'], breaks)
+        });
+      });
 
-    function colorData(landuse) {
-      if (landuse.properties.landcover == 'Water') {
+      sequenceUI(landuse88);
+      createTemporalLegend(currentYear);
+
+    } // end drawMap function
+
+    function getColor(e, breaks) {
+      if (e == "Water") {
         return '#0602FA';
-      } else if (landuse.properties.landcover == 'Forest') {
+      } else if (e == "Forest") {
         return '#2A4B2D';
-      } else if (landuse.properties.landcover == 'Grass') {
+      } else if (e == "Grass") {
         return '#399926';
-      } else if (landuse.properties.landcover == 'Exposed') {
+      } else if (e == "Exposed") {
         return '#59CECA';
-      } else if (landuse.properties.landcover == 'Marsh') {
+      } else if (e == "Marsh") {
         return '#7C227E';
-      } else if (landuse.properties.landcover == 'Farmland') {
+      } else if (e == "Farmland") {
         return '#EEE907';
-      } else if (landuse.properties.landcover == 'Urban') {
-        return '#464646';
-      };
-    }
+      } else if (e == "Urban") {
+        return '#A9A9A9';
+      }
+    } // End getColor function
+
+  function sequenceUI(landuse88) {
+
+      // create Leaflet control for the slider
+      var sliderControl = L.control({
+        position: 'bottomleft'
+      });
+
+      sliderControl.onAdd = function(map) {
+
+        var controls = L.DomUtil.get("slider");
+
+        L.DomEvent.disableScrollPropagation(controls);
+        L.DomEvent.disableClickPropagation(controls);
+
+        return controls;
+
+      }
+
+      // add the control to the map
+      sliderControl.addTo(map);
+
+      $('.slider')
+        .on('input change', function() {
+          var currentYear = $(this).val();
+          // Add some new functions to change map here
+          //resizeCircles(girlsLayer, boysLayer, currentYear);
+          //retrieveInfo(boysLayer, currentYear);
+          createTemporalLegend(currentYear);
+        });
+
+    } // End sequenceUI function
+
+
+
+    sliderControl.addTo(map);
+
+    // add a temporal legend in sync with the UI slider
+    function createTemporalLegend(currentYear) {
+
+      var temporalLegend = L.control({
+        position: 'bottomleft' // place the temporal legend at bottom left corner
+      });
+
+      // when added to the map
+      temporalLegend.onAdd = function(map) {
+
+        var div = L.DomUtil.get("temporal"); // get the style settings
+
+        // disable the mouse events
+        L.DomEvent.disableScrollPropagation(div);
+        L.DomEvent.disableClickPropagation(div);
+
+        return div; // return the style settings
+
+      }
+
+      $('#temporal span').html(currentYear); // change grade value to that currently selected by UI slider
+
+      temporalLegend.addTo(map); // add the temporal legend to the map
+
+    }; // end createTemporalLegend() function
 
   </script>
-
 </body>
+
 </html>
