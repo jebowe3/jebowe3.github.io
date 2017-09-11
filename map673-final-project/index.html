@@ -113,9 +113,6 @@
   // create empty layerGroup for holding currently displaced layer and add to map
   var displayLayer = L.layerGroup().addTo(map);
 
-  // create an empty layerGroup for holding layers when not on map
-  var landuseLayers = L.layerGroup();
-
   // load all the data asynchronously
   d3.queue()
     .defer(d3.json, 'data/SCA-Landcover-88.json')
