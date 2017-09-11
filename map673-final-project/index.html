@@ -94,13 +94,23 @@
   <script async defer src='https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.js'></script>
   <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
   <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
+
 
   <script>
 
-    // Set 1988 land cover layer variable
-    var landUse88 = L.geoJson(null, {
+  // mapbox access token for Jay's account
+  L.mapbox.accessToken = 'pk.eyJ1IjoiamVib3dlMyIsImEiOiJjajY1M3l6bWIxeTQwMndtcXRuN3F4ejFpIn0.aE7P49pqaBKjy2HTOw-tgw';
+  var map = L.mapbox.map('map', 'mapbox.light', {
+    zoomSnap: 0.1,
+    center: [37.5, 126.975],
+    zoom: 10.5,
+    minZoom: 9,
+    maxZoom: 12,
+    maxBounds: L.latLngBounds([38.0, 126.5], [37.0, 127.5])
+  });
+
+  var landUse88 = $.getJSON("data/SCA-Landcover-88.json", function(data) {
+    var dataLayer = L.geoJson(data, {
       style: function(feature) {
         return {
           stroke: 0,
@@ -108,16 +118,13 @@
           fillColor: '#1f78b4'
         };
       },
+    }).addData(data);
 
-    });
+    drawMap(dataLayer);
+  });
 
-    $.getJSON("data/SCA-Landcover-88.json", function(data) {
-        landUse88.addData(data);
-    }); // end add 1988 land cover data
-
-
-    // Set 1998 land cover layer variable
-    var landUse98 = L.geoJson(null, {
+  var landUse98 = $.getJSON("data/SCA-Landcover-98.json", function(data) {
+    var dataLayer = L.geoJson(data, {
       style: function(feature) {
         return {
           stroke: 0,
@@ -125,198 +132,128 @@
           fillColor: '#1f78b4'
         };
       },
+    }).addData(data);
 
+    drawMap(dataLayer);
+  });
+
+  // Add var landUse08 here
+
+  function drawMap(dataLayer) {
+
+    var currentYear = $('.slider').val();
+
+    var breaks = [
+      "Water",
+      "Forest",
+      "Grass",
+      "Exposed",
+      "Marsh",
+      "Farmland",
+      "Urban"
+    ];
+
+    dataLayer.eachLayer(function(layer) {
+      layer.setStyle({
+        fillColor: getColor(layer.feature.properties['landcover'], breaks)
+      });
     });
 
-    $.getJSON("data/SCA-Landcover-98.json", function(data) {
-        landUse98.addData(data);
-    }); // end add 1998 land cover data
+    sequenceUI(landUse88, landUse98);
+    createTemporalLegend(currentYear);
 
-    // mapbox access token for Jay's account
-    L.mapbox.accessToken = 'pk.eyJ1IjoiamVib3dlMyIsImEiOiJjajY1M3l6bWIxeTQwMndtcXRuN3F4ejFpIn0.aE7P49pqaBKjy2HTOw-tgw';
+  } // end drawMap function
 
-    // create the Leaflet map using mapbox.light tiles
-    var map = L.mapbox.map('map', 'mapbox.light', {
-      zoomSnap: .1,
-      center: [37.5, 126.975],
-      zoom: 10.5,
-      minZoom: 9,
-      maxZoom: 12,
-      maxBounds: L.latLngBounds([38.0, 126.5], [37.0, 127.5])
-    }); // end map creation
+  function getColor(e, breaks) {
+    if (e == "Water") {
+      return '#0602FA';
+    } else if (e == "Forest") {
+      return '#2A4B2D';
+    } else if (e == "Grass") {
+      return '#399926';
+    } else if (e == "Exposed") {
+      return '#59CECA';
+    } else if (e == "Marsh") {
+      return '#7C227E';
+    } else if (e == "Farmland") {
+      return '#EEE907';
+    } else if (e == "Urban") {
+      return '#A9A9A9';
+    }
+  } // End getColor function
 
-    // specify the basemap and overlays to put in the layers control
-    var baseMaps = {
-        "ROK": map,
-    };
+function sequenceUI(landUse88, landUse98) {
 
-    var overlayMaps = {
-        "LandUse88": landUse88,
-        "LandUse98": landUse98
-    };
-
-    // initialize up the L.control.layers
-    L.control.layers(baseMaps, overlayMaps).addTo(map);
-
-
-/*
-    // parse the geojson (very simplified example here)
-    var zip = L.geoJson(zipjson, {});
-    var counties = L.geoJson(countiesjson, {});
-
-    // from there, similar to the example:
-    var usmap = L.tileLayer(url, {});
-
-    // initialize the map
-    var map = L.map('map', {
-        center: [39.73, -104.99],
-        zoom: 10,
-        layers: [usmap]
+    // create Leaflet control for the slider
+    var sliderControl = L.control({
+      position: 'bottomleft'
     });
 
-    // specify the basemap and overlays to put in the layers control
-    var baseMaps = {
-        "US": usmap,
-    };
+    sliderControl.onAdd = function(map) {
 
-    var overlayMaps = {
-        "Counties": counties,
-        "Zips": zip
-    };
+      var controls = L.DomUtil.get("slider");
 
-    // initialize up the L.control.layers
-    L.control.layers(baseMaps, overlayMaps).addTo(map);
-*/
-/*
-    // mapbox access token for Jay's account
-    L.mapbox.accessToken = 'pk.eyJ1IjoiamVib3dlMyIsImEiOiJjajY1M3l6bWIxeTQwMndtcXRuN3F4ejFpIn0.aE7P49pqaBKjy2HTOw-tgw';
-    var map = L.mapbox.map('map', 'mapbox.light', {
-      zoomSnap: 0.1,
-      center: [37.5, 126.975],
-      zoom: 10.5,
-      minZoom: 9,
-      maxZoom: 12,
-      maxBounds: L.latLngBounds([38.0, 126.5], [37.0, 127.5])
-    });
-*/
-/*
-    var landUse88 = $.getJSON("data/SCA-Landcover-88.json", function(data) {
-      var dataLayer = L.geoJson(data, {
-        style: function(feature) {
-          return {
-            stroke: 0,
-            fillOpacity: 1,
-            fillColor: '#1f78b4'
-          };
-        },
-      }).addTo(map);
+      L.DomEvent.disableScrollPropagation(controls);
+      L.DomEvent.disableClickPropagation(controls);
 
-      drawMap(dataLayer);
-    });
-*/
-    function drawMap(dataLayer) {
+      return controls;
 
-      var currentYear = $('.slider').val();
+    }
 
-      var breaks = [
-        "Water",
-        "Forest",
-        "Grass",
-        "Exposed",
-        "Marsh",
-        "Farmland",
-        "Urban"
-      ];
+    // add the control to the map
+    sliderControl.addTo(map);
 
-      dataLayer.eachLayer(function(layer) {
-        layer.setStyle({
-          fillColor: getColor(layer.feature.properties['landcover'], breaks)
-        });
+    $('.slider')
+      .on('input change', function() {
+        var currentYear = $(this).val();
+        // Add some new functions to change map here
+        //resizeCircles(girlsLayer, boysLayer, currentYear);
+        retrieveLayer(landUse88, landUse98, currentYear);
+        createTemporalLegend(currentYear);
       });
 
-      sequenceUI(landUse88, landUse98);
-      createTemporalLegend(currentYear);
-
-    } // end drawMap function
-
-    function getColor(e, breaks) {
-      if (e == "Water") {
-        return '#0602FA';
-      } else if (e == "Forest") {
-        return '#2A4B2D';
-      } else if (e == "Grass") {
-        return '#399926';
-      } else if (e == "Exposed") {
-        return '#59CECA';
-      } else if (e == "Marsh") {
-        return '#7C227E';
-      } else if (e == "Farmland") {
-        return '#EEE907';
-      } else if (e == "Urban") {
-        return '#A9A9A9';
-      }
-    } // End getColor function
-
-  function sequenceUI(landUse88, landUse98) {
-
-      // create Leaflet control for the slider
-      var sliderControl = L.control({
-        position: 'bottomleft'
-      });
-
-      sliderControl.onAdd = function(map) {
-
-        var controls = L.DomUtil.get("slider");
-
-        L.DomEvent.disableScrollPropagation(controls);
-        L.DomEvent.disableClickPropagation(controls);
-
-        return controls;
-
-      }
-
-      // add the control to the map
-      sliderControl.addTo(map);
-
-      $('.slider')
-        .on('input change', function() {
-          var currentYear = $(this).val();
-          // Add some new functions to change map here
-          //resizeCircles(girlsLayer, boysLayer, currentYear);
-          //retrieveLayer(landUse88, landUse98, currentYear);
-          createTemporalLegend(currentYear);
-        });
-
-    }; // End sequenceUI function
+  }; // End sequenceUI function
 
 
-    // add a temporal legend in sync with the UI slider
-    function createTemporalLegend(currentYear) {
+  // add a temporal legend in sync with the UI slider
+  function createTemporalLegend(currentYear) {
 
-      var temporalLegend = L.control({
-        position: 'bottomleft' // place the temporal legend at bottom left corner
-      });
+    var temporalLegend = L.control({
+      position: 'bottomleft' // place the temporal legend at bottom left corner
+    });
 
-      // when added to the map
-      temporalLegend.onAdd = function(map) {
+    // when added to the map
+    temporalLegend.onAdd = function(map) {
 
-        var div = L.DomUtil.get("temporal"); // get the style settings
+      var div = L.DomUtil.get("temporal"); // get the style settings
 
-        // disable the mouse events
-        L.DomEvent.disableScrollPropagation(div);
-        L.DomEvent.disableClickPropagation(div);
+      // disable the mouse events
+      L.DomEvent.disableScrollPropagation(div);
+      L.DomEvent.disableClickPropagation(div);
 
-        return div; // return the style settings
+      return div; // return the style settings
 
-      }
+    }
 
-      $('#temporal span').html(currentYear); // change grade value to that currently selected by UI slider
+    $('#temporal span').html(currentYear); // change grade value to that currently selected by UI slider
 
-      temporalLegend.addTo(map); // add the temporal legend to the map
+    temporalLegend.addTo(map); // add the temporal legend to the map
 
-    }; // end createTemporalLegend() function
+  }; // end createTemporalLegend function
 
-  </script>
+  function retrieveLayer(landUse88, landUse98, currentYear) { // something wrong with this function
+
+    if (currentYear == '1988') {
+      map.addLayer(landUse88);
+    } else if (currentYear == '1998') {
+      map.addLayer(landUse98);
+    } else if (currentYear == '2008') {
+      map.addLayer(landUse08);
+    }
+
+  }; // end retrieveLayer function
+
+</script>
 </body>
 
 </html>
