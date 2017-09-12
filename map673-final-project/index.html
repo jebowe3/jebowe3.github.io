@@ -81,7 +81,7 @@
         <div><span style='background-color: #59CECA'></span>Exposed</div>
         <div><span style='background-color: #7C227E'></span>Marsh</div>
         <div><span style='background-color: #EEE907'></span>Farmland</div>
-        <div><span style='background-color: #A9A9A9'></span>Urban</div>
+        <div><span style='background-color: #C0C0C0'></span>Urban</div>
       </div>
 
       <div id='temporal' class='py6 px12 bg-white border border--gray-light round bottom left wmax200'>
@@ -119,11 +119,13 @@
     // designate variables for mbtiles
     var landUse88 = L.mapbox.styleLayer('mapbox://styles/jebowe3/cj7hphg9c4tyc2sof07b8k3on');
     var landUse98 = L.mapbox.styleLayer('mapbox://styles/jebowe3/cj7hpmj0f4uif2rnyqd2yvyna');
+    var landUse08 = L.mapbox.styleLayer('mapbox://styles/jebowe3/cj7i3yjix57gj2sofqfnlkwaq');
 
     // create an object to "map" the slider values to the layers
     var layersMap = {
       "1988": landUse88,
-      "1998": landUse98
+      "1998": landUse98,
+      "2008": landUse08
     };
 
     // example of how we can dynamically add a layer using the layersMap object
