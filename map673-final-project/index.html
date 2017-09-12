@@ -94,6 +94,8 @@
   <script async defer src='https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.js'></script>
   <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
   <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://d3js.org/d3-tile.v0.0.min.js"></script>
 
 
   <script>
@@ -109,62 +111,56 @@
     maxBounds: L.latLngBounds([38.0, 126.5], [37.0, 127.5])
   });
 
-  var landUse88 = $.getJSON("data/SCA-Landcover-88.json", function(data) {
-    var dataLayer = L.geoJson(data, {
-      style: function(feature) {
-        return {
-          stroke: 0,
-          fillOpacity: 1,
-          fillColor: '#1f78b4'
-        };
-      },
-    }).addData(data);
+  // create empty layerGroup for holding currently displaced layer and add to map
+  var displayLayer = L.layerGroup().addTo(map);
 
-    drawMap(dataLayer);
-  });
+  // create an empty layerGroup for holding layers when not on map
+  var landuseLayers = L.layerGroup();
 
-  var landUse98 = $.getJSON("data/SCA-Landcover-98.json", function(data) {
-    var dataLayer = L.geoJson(data, {
-      style: function(feature) {
-        return {
-          stroke: 0,
-          fillOpacity: 1,
-          fillColor: '#1f78b4'
-        };
-      },
-    }).addData(data);
+  // load all the data asynchronously
+  d3.queue()
+    .defer(d3.json, 'data/SCA-Landcover-88.json')
+    .defer(d3.json, 'data/SCA-Landcover-98.json')
+    .await(makeMap);
 
-    drawMap(dataLayer);
-  });
+  function makeMap(err, data88, data98) {
 
-  // Add var landUse08 here
+      // create Leaflet GeoJSON layer and add to landuseLayers
+      var landUse88 = L.geoJson(data88, {
+        style: function(feature) {
+          return {
+            stroke: 0,
+            fillOpacity: 1,
+            fillColor: getColor(feature.properties['landcover'])
+          };
+        }
+      }); // add the first one to the map
 
-  function drawMap(dataLayer) {
+      var landUse98 = L.geoJson(data98, {
+        style: function(feature) {
+          return {
+            stroke: 0,
+            fillOpacity: 1,
+            fillColor: getColor(feature.properties['landcover'])
+          };
+        }
+    }); // add the others to the temporary layer group
 
-    var currentYear = $('.slider').val();
+      // create an object to "map" the slider values to the layers
+    var layersMap = {
+      "1988": landUse88,
+      "1998": landUse98
+    };
 
-    var breaks = [
-      "Water",
-      "Forest",
-      "Grass",
-      "Exposed",
-      "Marsh",
-      "Farmland",
-      "Urban"
-    ];
+    // example of how we can dynamically add a layer using the layersMap object
+    displayLayer.addLayer(layersMap["1998"]);
 
-    dataLayer.eachLayer(function(layer) {
-      layer.setStyle({
-        fillColor: getColor(layer.feature.properties['landcover'], breaks)
-      });
-    });
+    sequenceUI(layersMap);
 
-    sequenceUI(landUse88, landUse98);
-    createTemporalLegend(currentYear);
-
-  } // end drawMap function
+  }
 
   function getColor(e, breaks) {
+
     if (e == "Water") {
       return '#0602FA';
     } else if (e == "Forest") {
@@ -182,7 +178,7 @@
     }
   } // End getColor function
 
-function sequenceUI(landUse88, landUse98) {
+function sequenceUI(layersMap) {
 
     // create Leaflet control for the slider
     var sliderControl = L.control({
@@ -204,16 +200,25 @@ function sequenceUI(landUse88, landUse98) {
     sliderControl.addTo(map);
 
     $('.slider')
-      .on('input change', function() {
+      .on('change touch', function() {
         var currentYear = $(this).val();
-        // Add some new functions to change map here
-        //resizeCircles(girlsLayer, boysLayer, currentYear);
-        retrieveLayer(landUse88, landUse98, currentYear);
-        createTemporalLegend(currentYear);
+        updateLayers(layersMap, currentYear);
       });
 
   }; // End sequenceUI function
 
+  function updateLayers(layersMap, val) {
+    // loop through our layersMap object
+    for(var layer in layersMap) {
+      // add the layer if matches the new value
+      if(layer === val) {
+        displayLayer.addLayer(layersMap[layer]);
+      } else {
+        // otherwise remove the layer
+        displayLayer.removeLayer(layersMap[layer]);
+      }
+    }
+  }
 
   // add a temporal legend in sync with the UI slider
   function createTemporalLegend(currentYear) {
@@ -241,17 +246,6 @@ function sequenceUI(landUse88, landUse98) {
 
   }; // end createTemporalLegend function
 
-  function retrieveLayer(landUse88, landUse98, currentYear) { // something wrong with this function
-
-    if (currentYear == '1988') {
-      map.addLayer(landUse88);
-    } else if (currentYear == '1998') {
-      map.addLayer(landUse98);
-    } else if (currentYear == '2008') {
-      map.addLayer(landUse08);
-    }
-
-  }; // end retrieveLayer function
 
 </script>
 </body>
