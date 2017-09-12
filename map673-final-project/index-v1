@@ -92,120 +92,162 @@
   </div>
 
   <script async defer src='https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.js'></script>
-  <script src='https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.js'></script>
+  <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
   <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://d3js.org/d3-tile.v0.0.min.js"></script>
 
 
   <script>
-    // mapbox access token for Jay's account
-    L.mapbox.accessToken = 'pk.eyJ1IjoiamVib3dlMyIsImEiOiJjajY1M3l6bWIxeTQwMndtcXRuN3F4ejFpIn0.aE7P49pqaBKjy2HTOw-tgw';
-    var map = L.mapbox.map('map', 'mapbox.light', {
-      zoomSnap: 0.1,
-      center: [37.5, 126.975],
-      zoom: 10.5,
-      minZoom: 9,
-      maxZoom: 12,
-      maxBounds: L.latLngBounds([38.0, 126.5], [37.0, 127.5])
-    });
 
-    // create empty layerGroup for holding currently displaced layer and add to map
-    var displayLayer = L.layerGroup().addTo(map);
+  // mapbox access token for Jay's account
+  L.mapbox.accessToken = 'pk.eyJ1IjoiamVib3dlMyIsImEiOiJjajY1M3l6bWIxeTQwMndtcXRuN3F4ejFpIn0.aE7P49pqaBKjy2HTOw-tgw';
+  var map = L.mapbox.map('map', 'mapbox.light', {
+    zoomSnap: 0.1,
+    center: [37.5, 126.975],
+    zoom: 10.5,
+    minZoom: 9,
+    maxZoom: 12,
+    maxBounds: L.latLngBounds([38.0, 126.5], [37.0, 127.5])
+  });
 
-    // create an empty layerGroup for holding layers when not on map
-    var landuseLayers = L.layerGroup();
+  // create empty layerGroup for holding currently displaced layer and add to map
+  var displayLayer = L.layerGroup().addTo(map);
 
-    // designate variables for mbtiles
-    var landUse88 = L.mapbox.styleLayer('mapbox://styles/jebowe3/cj7hphg9c4tyc2sof07b8k3on');
-    var landUse98 = L.mapbox.styleLayer('mapbox://styles/jebowe3/cj7hpmj0f4uif2rnyqd2yvyna');
+  // create an empty layerGroup for holding layers when not on map
+  var landuseLayers = L.layerGroup();
 
-    // create an object to "map" the slider values to the layers
+  // load all the data asynchronously
+  d3.queue()
+    .defer(d3.json, 'data/SCA-Landcover-88.json')
+    .defer(d3.json, 'data/SCA-Landcover-98.json')
+    .await(makeMap);
+
+  function makeMap(err, data88, data98) {
+
+      // create Leaflet GeoJSON layer and add to landuseLayers
+      var landUse88 = L.geoJson(data88, {
+        style: function(feature) {
+          return {
+            stroke: 0,
+            fillOpacity: 1,
+            fillColor: getColor(feature.properties['landcover'])
+          };
+        }
+      }); // add the first one to the map
+
+      var landUse98 = L.geoJson(data98, {
+        style: function(feature) {
+          return {
+            stroke: 0,
+            fillOpacity: 1,
+            fillColor: getColor(feature.properties['landcover'])
+          };
+        }
+    }); // add the others to the temporary layer group
+
+      // create an object to "map" the slider values to the layers
     var layersMap = {
       "1988": landUse88,
       "1998": landUse98
     };
 
     // example of how we can dynamically add a layer using the layersMap object
-    displayLayer.addLayer(layersMap["1988"]);
+    displayLayer.addLayer(layersMap["1998"]);
 
     sequenceUI(layersMap);
-    createTemporalLegend(layersMap);
 
+  }
 
-    // add a temporal legend in sync with the UI slider
-    function createTemporalLegend(currentYear) {
+  function getColor(e, breaks) {
 
-      var temporalLegend = L.control({
-        position: 'bottomleft' // place the temporal legend at bottom left corner
+    if (e == "Water") {
+      return '#0602FA';
+    } else if (e == "Forest") {
+      return '#2A4B2D';
+    } else if (e == "Grass") {
+      return '#399926';
+    } else if (e == "Exposed") {
+      return '#59CECA';
+    } else if (e == "Marsh") {
+      return '#7C227E';
+    } else if (e == "Farmland") {
+      return '#EEE907';
+    } else if (e == "Urban") {
+      return '#A9A9A9';
+    }
+  } // End getColor function
+
+function sequenceUI(layersMap) {
+
+    // create Leaflet control for the slider
+    var sliderControl = L.control({
+      position: 'bottomleft'
+    });
+
+    sliderControl.onAdd = function(map) {
+
+      var controls = L.DomUtil.get("slider");
+
+      L.DomEvent.disableScrollPropagation(controls);
+      L.DomEvent.disableClickPropagation(controls);
+
+      return controls;
+
+    }
+
+    // add the control to the map
+    sliderControl.addTo(map);
+
+    $('.slider')
+      .on('change touch', function() {
+        var currentYear = $(this).val();
+        updateLayers(layersMap, currentYear);
       });
 
-      // when added to the map
-      temporalLegend.onAdd = function(map) {
+  }; // End sequenceUI function
 
-        var div = L.DomUtil.get("temporal"); // get the style settings
-
-        // disable the mouse events
-        L.DomEvent.disableScrollPropagation(div);
-        L.DomEvent.disableClickPropagation(div);
-
-        return div; // return the style settings
-
+  function updateLayers(layersMap, val) {
+    // loop through our layersMap object
+    for(var layer in layersMap) {
+      // add the layer if matches the new value
+      if(layer === val) {
+        displayLayer.addLayer(layersMap[layer]);
+      } else {
+        // otherwise remove the layer
+        displayLayer.removeLayer(layersMap[layer]);
       }
+    }
+  }
 
-      $('#temporal span').html(currentYear); // change grade value to that currently selected by UI slider
+  // add a temporal legend in sync with the UI slider
+  function createTemporalLegend(currentYear) {
 
-      temporalLegend.addTo(map); // add the temporal legend to the map
+    var temporalLegend = L.control({
+      position: 'bottomleft' // place the temporal legend at bottom left corner
+    });
 
-    }; // end createTemporalLegend function
+    // when added to the map
+    temporalLegend.onAdd = function(map) {
 
+      var div = L.DomUtil.get("temporal"); // get the style settings
 
+      // disable the mouse events
+      L.DomEvent.disableScrollPropagation(div);
+      L.DomEvent.disableClickPropagation(div);
 
-    function sequenceUI(layersMap) {
+      return div; // return the style settings
 
-      // create Leaflet control for the slider
-      var sliderControl = L.control({
-        position: 'bottomleft'
-      });
+    }
 
-      sliderControl.onAdd = function(map) {
+    $('#temporal span').html(currentYear); // change grade value to that currently selected by UI slider
 
-        var controls = L.DomUtil.get("slider");
+    temporalLegend.addTo(map); // add the temporal legend to the map
 
-        L.DomEvent.disableScrollPropagation(controls);
-        L.DomEvent.disableClickPropagation(controls);
-
-        return controls;
-
-      }
-
-      // add the control to the map
-      sliderControl.addTo(map);
-
-      $('.slider')
-        .on('change touch', function() {
-          var currentYear = $(this).val();
-          updateLayers(layersMap, currentYear);
-        });
-
-    }; // End sequenceUI function
+  }; // end createTemporalLegend function
 
 
-
-    function updateLayers(layersMap, val) {
-      // loop through our layersMap object
-      for (var layer in layersMap) {
-        // add the layer if matches the new value
-        if (layer === val) {
-          displayLayer.addLayer(layersMap[layer]);
-        } else {
-          // otherwise remove the layer
-          displayLayer.removeLayer(layersMap[layer]);
-        }
-      }
-    } // End updateLayers function
-
-  </script>
+</script>
 </body>
 
 </html>
