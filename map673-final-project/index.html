@@ -105,8 +105,8 @@
       zoomSnap: 0.1,
       center: [37.5, 126.975],
       zoom: 10.5,
-      minZoom: 9,
-      maxZoom: 12,
+      minZoom: 9.5,
+      maxZoom: 13.5,
       maxBounds: L.latLngBounds([38.0, 126.5], [37.0, 127.5])
     });
 
@@ -133,6 +133,7 @@
 
     sequenceUI(layersMap);
     createTemporalLegend(layersMap);
+
 
 
     // add a temporal legend in sync with the UI slider
@@ -185,9 +186,10 @@
       sliderControl.addTo(map);
 
       $('.slider')
-        .on('change touch', function() {
+        .on('mousemove', function() {
           var currentYear = $(this).val();
           updateLayers(layersMap, currentYear);
+          createTemporalLegend(currentYear);
         });
 
     }; // End sequenceUI function
@@ -206,7 +208,6 @@
         }
       }
     } // End updateLayers function
-
   </script>
 </body>
 
