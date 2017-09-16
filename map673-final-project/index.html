@@ -134,6 +134,81 @@
     sequenceUI(layersMap);
     createTemporalLegend(layersMap);
 
+    // add an empty layer control to the map
+    var layerControl = L.control.layers().addTo(map);
+
+
+
+    // FIND OUT HOW TO ATTACH THESE LAYERS TO A LAYER CONTROL METHOD TO CLICK ON AND OFF
+    // load all the data asynchronously
+    d3.queue()
+      .defer(d3.json, 'data/Seoul_districtsPeriphery.geojson')
+      .defer(d3.json, 'data/Greenbelt_maxExtent.geojson')
+      .defer(d3.json, 'data/SCA_Greenbelt_2016.geojson')
+      .defer(d3.json, 'data/SCA_Greenbelt_deregTo2016.geojson')
+      .await(drawMap);
+
+    function drawMap(err, districts, belt98, belt16, beltDereg) {
+
+      // create cityDistricts Leaflet GeoJSON layer
+      var cityDistricts = L.geoJson(districts, {
+        style: function(feature) {
+          return {
+            stroke: 1,
+            color: 'black',
+            weight: 1.5,
+            fillOpacity: 0
+          };
+        }
+      });
+
+      // create greenbelt 1998 Leaflet GeoJSON layer
+      var greenbelt1998 = L.geoJson(belt98, {
+        style: function(feature) {
+          return {
+            stroke: 1,
+            color: 'brown',
+            weight: 1.5,
+            fillColor: 'brown',
+            fillOpacity: 0.5
+          };
+        }
+      });
+
+      // create greenbelt 2016 Leaflet GeoJSON layer
+      var greenbelt2016 = L.geoJson(belt16, {
+        style: function(feature) {
+          return {
+            stroke: 1,
+            color: 'brown',
+            weight: 1.5,
+            fillColor: 'brown',
+            fillOpacity: 0.5
+          };
+        }
+      });
+
+      // create greenbelt 1998 Leaflet GeoJSON layer
+      var greenbeltDeregulation = L.geoJson(beltDereg, {
+        style: function(feature) {
+          return {
+            stroke: 1,
+            color: 'brown',
+            weight: 1.5,
+            fillColor: 'brown',
+            fillOpacity: 0.3
+          };
+        }
+      });
+
+      // all done with the layers, add them to the control
+      layerControl.addOverlay(cityDistricts, "Seoul Districts");
+      layerControl.addOverlay(greenbelt1998, "Greenbelt 1998");
+      layerControl.addOverlay(greenbelt2016, "Greenbelt 2016");
+      layerControl.addOverlay(greenbeltDeregulation, "Greenbelt Deregulated: 1998-2016");
+
+    }; // end drawMap function
+
 
 
     // add a temporal legend in sync with the UI slider
