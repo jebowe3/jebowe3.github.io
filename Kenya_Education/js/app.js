@@ -224,13 +224,13 @@
     // adjust the position of the large based on size of circle
     $(".legend-large-label").css({
       'top': -11,
-      'left': largeDiameter + 65,
+      'left': largeDiameter + 60,
     });
 
     // adjust the position of the large based on size of circle
     $(".legend-small-label").css({
       'top': smallDiameter - 11,
-      'left': largeDiameter + 65
+      'left': largeDiameter + 60,
     });
 
     // insert a couple hr elements and use to connect value label to top of each circle
