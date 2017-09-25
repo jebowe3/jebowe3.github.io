@@ -198,7 +198,7 @@
     var maxValue = Math.round(sortedValues[0] / 1000) * 1000;
 
     // calc the diameters
-    var largeDiameter = calcRadius(maxValue) * 1.75,
+    var largeDiameter = calcRadius(maxValue) * 2,
       smallDiameter = largeDiameter / 2;
 
     // select our circles container and set the height
@@ -224,13 +224,13 @@
     // adjust the position of the large based on size of circle
     $(".legend-large-label").css({
       'top': -11,
-      'left': largeDiameter + 60,
+      'left': largeDiameter + 35,
     });
 
     // adjust the position of the large based on size of circle
     $(".legend-small-label").css({
       'top': smallDiameter - 11,
-      'left': largeDiameter + 60,
+      'left': largeDiameter + 35,
     });
 
     // insert a couple hr elements and use to connect value label to top of each circle
