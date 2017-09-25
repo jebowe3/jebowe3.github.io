@@ -1,0 +1,46 @@
+.legend-large, .legend-small {
+  border-radius: 50%;
+}
+
+hr.small, hr.large {
+  width: 83px;
+  position: absolute;
+  top: -8px;
+  left: 55px;
+  border: 1px solid #ccc;
+  /* overwrite assembly.css rule */
+  margin-top: 8px;
+  /* overwrite assembly.css rule */
+}
+
+.boys {
+  color: #006600;
+}
+
+.girls {
+  color: #bb0000;
+}
+
+body {
+  font-family: "Lato", sans-serif;
+}
+
+p {
+  font-family: "EB Garamond", sans-serif;
+}
+
+.legend-large-label {
+  font-family: "EB Garamond", sans-serif;
+}
+
+.legend-small-label {
+  font-family: "EB Garamond", sans-serif;
+}
+
+h1 {
+  color: #006600;
+}
+
+h2 {
+  color: #bb0000;
+}

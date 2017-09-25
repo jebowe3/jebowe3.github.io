@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset=utf-8 />
+  <title>Gender and School Enrollment in Kenya</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+  <link href='https://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=EB+Garamond' rel='stylesheet' type='text/css'>
+  <link href='https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.min.css' rel='stylesheet'>
+  <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet' />
+  <link href='css/styles.css' rel='stylesheet' />
+</head>
+
+<body>
+
+  <div class='grid'>
+
+    <div class='col col--12 col--3-ml p12 pb6 viewport-third viewport-full-ml'>
+      <div class='h-full scroll-auto'>
+        <h1 class='txt-headline mb6'>Gender Equity Success in Kenyan Primary Schools</h1>
+        <p>This map uses open source data from the government of Kenya regarding enrollment by gender and grade for each county in 2014. The Kenyan government seeks to promote and maintain equal rates of primary school attendance among boys and girls throughout
+          the country. This map visually presents attrition rates of boys and girls as they progress through school, allowing stakeholders to identify regions requiring more attention to gender equality in school enrollment and retention.</p>
+        <h2 class='txt-xl mt18 mb12'>How to use this map:</h2>
+        <p>Kenya has done a great job achieving equal rates of enrollment and retention among girls and boys in primary school in recent years, but you wonder where there might be gaps. After reading the paragraph above, you realize that this data is from
+          2014. You scan the map. In the bottom left corner, you notice a slider control and a box containing "Grade: 1" above it. As you move the slider widget, the grade level changes. You also notice the circle markers getting smaller or larger on
+          the map. You move your cursor over these circles and a box containing raw data for a specific county appears. Now you can see the numeric breakdown of enrollment by gender for each county and grade level, as well as a gender-based comparison
+          of the overall trends in enrollment between grades 1 and 8. Realizing that boys are color coded green and girls are color coded red, you watch the proportional circles change size as you slide between grades. You realize that inequality in enrollment
+          is most prominent in Kenya's northern and eastern counties. With this information, you resolve to look into what shared social and economic factors in these regions might be contributing to this relative lack of parity.</p>
+        <footer class='mt12 bg-gray-faint txt-s'>
+          <ul>
+            <li>Explore the raw <a class='link' href='https://icta-kenyaopendata.opendata.arcgis.com/datasets/national-boys-and-girls-enrollments-per-class-for-primary-school-education'>data</a></li>
+            <li>Map authored by <a class='link' href='https://geography.as.uky.edu/users/jebowe3'>Jay Bowen</a></li>
+          </ul>
+        </footer>
+      </div>
+    </div>
+
+    <div class='col col--12 col--9-ml h180 h-full-ml'>
+      <div id="map" class='viewport-twothirds viewport-full-ml'></div>
+
+      <!-- ui slider -->
+      <div id='slider' class='range w240 bg-white border border--gray-light round-ml p12'>
+        <input type='range' min="1" max="8" value="1" step="1" class="slider" />
+      </div>
+
+      <!-- legend -->
+      <div id='legend' class='bg-white border border--gray-light round-ml p18'>
+        <h3 class='txt-bold mb12 w-full mx-auto'>School Enrollment among<br><font color='#bb0000'>Girls</font> and <font color='#006600'>Boys</font></h3>
+        <div class='legend-circles relative w180 wmax180'>
+          <div class="legend-large border border--gray-light absolute"></div>
+          <div class="legend-small border border--gray-light absolute"></div>
+          <div class="legend-large-label txt-m absolute"></div>
+          <div class="legend-small-label txt-m absolute"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id='info' class='py6 px12 bg-white border border--gray-light round absolute wmax200 none'>
+    <h3 class='txt-bold'>County: <span></span></h3>
+    <p class='girls'>girls <span></span>: <span class='txt-l txt-bold'></span></p>
+    <p class='boys'>boys <span></span>: <span class='txt-l txt-bold'></span></p>
+    <hr class='txt-hr'>
+    <p class='my6'>trend: grades 1 &ndash; 8</p>
+    <p class='mb6'><span class='girlspark'></span></p>
+    <p class='mb6'><span class='boyspark'></span></p>
+  </div>
+
+  <div id='temporal' class='py6 px12 bg-white border border--gray-light round bottom left wmax200'>
+    <h3 class='txt-bold'>Grade: <span></span></h3>
+  </div>
+
+  <script async defer src="https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.js"></script>
+  <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.2.0/leaflet-omnivore.min.js'></script>
+  <script src='https://code.jquery.com/jquery-3.1.1.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.min.js"></script>
+  <script src='js/app.js'></script>
+
+</body>
+
+</html>
