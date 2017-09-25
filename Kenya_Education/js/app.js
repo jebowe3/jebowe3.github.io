@@ -198,7 +198,7 @@
     var maxValue = Math.round(sortedValues[0] / 1000) * 1000;
 
     // calc the diameters
-    var largeDiameter = calcRadius(maxValue) * 2,
+    var largeDiameter = calcRadius(maxValue) * 1.5,
       smallDiameter = largeDiameter / 2;
 
     // select our circles container and set the height
