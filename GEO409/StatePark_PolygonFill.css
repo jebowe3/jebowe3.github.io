@@ -1,0 +1,9 @@
+/** simple visualization */
+
+#natural_bridge_boundary{
+  polygon-fill: #229A00;
+  polygon-opacity: 0.5;
+  line-color: #055D00;
+  line-width: 1;
+  line-opacity: 0;
+}

@@ -1,0 +1,23 @@
+/** category visualization */
+
+#pedestrian_collisions_jan2004_to_april2016 {
+   marker-fill-opacity: 0.9;
+   marker-line-color: #FFF;
+   marker-line-width: 1;
+   marker-line-opacity: 1;
+   marker-placement: point;
+   marker-type: ellipse;
+   marker-width: 10;
+   marker-allow-overlap: true;
+}
+
+#pedestrian_collisions_jan2004_to_april2016[killed=0] {
+   marker-fill: #A6CEE3;
+}
+#pedestrian_collisions_jan2004_to_april2016[killed=1] {
+   marker-fill: #FF2900;
+}
+#pedestrian_collisions_jan2004_to_april2016[killed=2] {
+   marker-fill: #850200;
+   marker-width: 15;
+}
