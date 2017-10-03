@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Percentage of Adults Lacking Health Insurance by County</title>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+  <style>
+    html,
+    body,
+    #map {
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      background: #3d3d3d;
+    }
+
+    div.cartodb-legend {
+      width: 110px;
+    }
+
+    div.cartodb-legend.custom ul li .bullet {
+      border-radius: 0;
+      width: 15px;
+      height: 8px;
+    }
+
+    div.cartodb-infowindow {
+      position: absolute;
+      z-index: 12;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map">
+    <div class="legend"></div>
+  </div>
+
+  <link rel="stylesheet" href="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+  <script src="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/cartodb.js"></script>
+
+  <!-- include ajax simple statistics -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/1.0.1/simple_statistics.min.js"></script>
+
+  <script type="infowindow/html" id="infowindow_template">
+    <div class="cartodb-popup">
+      <a href="#close" class="cartodb-popup-close-button close">x</a>
+      <div class="cartodb-popup-content-wrapper">
+        <div class="cartodb-popup-header"></div>
+        <div class="cartodb-popup-content">
+          <!-- content.data contains the field info -->
+          <p><strong>{{content.data.name}} County</strong></p>
+          <p><strong>Adults Uninsured: {{content.data.uninsured}}%</strong></p>
+        </div>
+      </div>
+      <div class="cartodb-popup-tip-container"></div>
+    </div>
+  </script>
+
+  <script type="cartocss/html" id="land-styles">
+    #na_land_clipped['mapnik::geometry_type'=1] { marker-width: 7; marker-fill: #FFB927; marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-allow-overlap:
+    true; } #na_land_clipped['mapnik::geometry_type'=2] { line-color: #3EBCAE; line-width: 1.5; line-opacity: 1; } #na_land_clipped['mapnik::geometry_type'=3] { polygon-fill: #374C70; polygon-opacity: 0.9; polygon-gamma: 0.5; line-color: #FFF; line-width:
+    1; line-opacity: 0.5; line-comp-op: soft-light; }
+  </script>
+
+  <script type="cartocss/html" id="grat-styles">
+    #na_grat_clipped{ line-width: 1.5; line-color: #c4cccb; line-opacity: 0.16; }
+  </script>
+
+  <script>
+    var map = new L.Map('map', {
+      center: [0, 0],
+      zoom: 4
+    })
+/*
+    cartodb.createLayer(map, 'https://welcome-back-carto.cartodb.com/api/v2/viz/dbf394d4-d842-467b-865e-c94ea98ab9f3/viz.json', {
+        https: true
+      })
+      .addTo(map)
+      .on('error', function(err) {
+        alert("some error occurred: " + err);
+      });
+*/
+    // request the (non-geometry) data first to calculate class ranges
+    $.getJSON('https://welcome-back-carto.cartodb.com/api/v2/sql?format=JSON&q=SELECT * FROM uninsured_adults_county', function(data) {
+
+      // push all the values into an array
+      var values = [];
+      data.rows.forEach(function(row, i) {
+        if (row.uninsured) {
+          values.push(row.uninsured);
+        }
+
+      });
+
+      // create array of range clusters
+      var clusters = ss.ckmeans(values, 5);
+
+      // pull out the low and high values from each cluster
+      var ranges = clusters.map(function(cluster) {
+        return [cluster[0], cluster.pop()];
+      });
+
+      makeMap(ranges);
+
+    }); // end request
+
+    function makeMap(ranges) {
+
+      var colors = ['#ffffb2', '#fecc5c', '#fd8d3c', '#f03b20', '#bd0026'];
+
+      var legendData = []; // array to hold legend data
+
+      // build the cartoCSS
+      var cartoCSSRules = '#uninsured_adults_county{' +
+        'polygon-opacity: 1;' +
+        'polygon-comp-op: lighten;' +
+        'line-color: #FFF;' +
+        'line-width: 0.5;' +
+        'line-opacity: 1;' +
+        '}';
+
+      // loop backwards, high to low
+      for (var i = ranges.length; i--;) {
+
+        var value = ranges[i][1],
+          color = colors[i];
+
+        // build the individual rules
+        var thisRule = '#uninsured_adults_county [ uninsured <= ' +
+          value + '] { polygon-fill: ' + color + ';}'
+
+        // add them to the cartoCSS
+        cartoCSSRules += thisRule;
+
+        // create a single object for the legend
+        var legendClass = {
+          name: ranges[i][0] + " - " + ranges[i][1] + "%",
+          value: colors[i]
+        };
+
+        // push single object to legend data array
+        legendData.push(legendClass);
+      }
+
+      // source object for requesting the tiles
+      var countiesLayer = {
+        user_name: 'welcome-back-carto',
+        type: 'cartodb',
+        sublayers: [{
+          sql: "SELECT ST_Transform(the_geom, 2163) AS the_geom_webmercator, cartodb_id, name, uninsured FROM uninsured_adults_county",
+          cartocss: cartoCSSRules
+        }]
+      };
+
+      cartodb.createLayer(map, countiesLayer, {
+          https: true
+        })
+        .addTo(map)
+        .done(function(layer) {
+
+          // Adds the custom legend
+          var customLegend = new cdb.geo.ui.Legend.Custom({
+            title: "Uninsured Adults in 2015",
+            data: legendData
+          });
+
+          var perUninsured = layer.getSubLayer(0);
+
+          // append the rendered legend to the legend div
+          $(".legend").append(customLegend.render().$el);
+
+          cdb.vis.Vis.addInfowindow(
+            map, perUninsured, ['name', 'uninsured'], {
+              infowindowTemplate: $('#infowindow_template').html()
+            });
+
+        })
+        .error(function(err) {
+          console.log(err);
+        });
+
+    } // end makeMap()
+
+    var sourceObject = {
+      user_name: 'welcome-back-carto',
+      type: 'cartodb',
+      sublayers: [{
+          sql: "SELECT ST_Transform(the_geom, 2163) AS the_geom_webmercator, cartodb_id FROM na_grat_clipped",
+          cartocss: $("#grat-styles").text()
+        },
+        {
+          sql: "SELECT ST_Transform(the_geom, 2163) AS the_geom_webmercator, cartodb_id FROM na_land_clipped",
+          cartocss: $("#land-styles").text()
+        }
+      ]
+    };
+
+    cartodb.createLayer(map, sourceObject, {
+      https: true
+    }).addTo(map);
+  </script>
+
+</body>
+
+</html>
